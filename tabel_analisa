@@ -1,4 +1,4 @@
-CREATE TABLE `summer-prism-449313-p7.KimiaFarma20202023.tabel_analisa` 
+CREATE TABLE `summer-prism-449313-p7.KimiaFarma20202023.kf_tabel_analisa` 
 AS
 WITH PersentaseGrossLaba AS (
     SELECT
