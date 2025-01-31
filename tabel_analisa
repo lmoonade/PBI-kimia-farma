@@ -1,0 +1,60 @@
+CREATE TABLE `summer-prism-449313-p7.KimiaFarma20202023.tabel_analisa` 
+AS
+WITH HargaSetelahDiskon AS (
+  SELECT
+    product_id,
+    SUM(price * (1 - discount_percentage)) AS net_sales
+  FROM `summer-prism-449313-p7.KimiaFarma20202023.kf_final_transaction` t
+  GROUP BY
+    product_id
+),
+PersentaseGrossLaba AS (
+    SELECT
+        t.transaction_id,
+        t.branch_id,
+        t.price,
+        t.discount_percentage,
+        CASE
+            WHEN t.price <= 50000 THEN 0.10
+            WHEN t.price > 50000 AND t.price <= 100000 THEN 0.15
+            WHEN t.price > 100000 AND t.price <= 300000 THEN 0.20
+            WHEN t.price > 300000 AND t.price <= 500000 THEN 0.25 
+            ELSE 0.30
+        END AS persentase_gross_laba
+    FROM `summer-prism-449313-p7.KimiaFarma20202023.kf_final_transaction` t
+)
+SELECT
+  t.transaction_id,
+  t.date,
+  t.branch_id,
+  kc.branch_name,
+  kc.kota,
+  kc.provinsi,
+  kc.rating AS rating_cabang,
+  p.product_id,
+  p.product_name,
+  t.customer_name,
+  t.price AS actual_price,
+  t.discount_percentage,
+  pgl.persentase_gross_laba,
+  hsd.net_sales,
+  SUM(hsd.net_sales * pgl.persentase_gross_laba) AS nett_profit,
+  t.rating
+FROM
+  `summer-prism-449313-p7.KimiaFarma20202023.kf_final_transaction` t
+JOIN
+  `summer-prism-449313-p7.KimiaFarma20202023.kf_kantor_cabang` kc
+ON t.branch_id = kc.branch_id
+JOIN
+  `summer-prism-449313-p7.KimiaFarma20202023.kf_product` p
+ON t.product_id = p.product_id
+JOIN
+  PersentaseGrossLaba pgl
+ON t.transaction_id = pgl.transaction_id
+JOIN
+  HargaSetelahDiskon hsd
+ON t.product_id = hsd.product_id
+GROUP BY 
+  t.transaction_id, t.date, t.branch_id, kc.branch_name, kc.kota, kc.provinsi, 
+  kc.rating, p.product_id, p.product_name, t.customer_name, t.price, 
+  t.discount_percentage, pgl.persentase_gross_laba, hsd.net_sales, t.rating;
